@@ -1,0 +1,80 @@
+#!/usr/bin/env ruby
+$:.unshift File.join(File.dirname(__FILE__), "..", "lib")
+
+require 'fileutils'
+require 'yaml'
+require 'rubygems'
+require 'thor'
+require 'cookie_jar'
+require 'request_helper'
+
+class Microwave < Thor
+  CONFIG_FILE = File.expand_path('~/.chefkitchen.yml')
+
+  desc "create_tag", "create a chef tag" 
+  method_option :nodegroup, :aliases => "-n", :desc => "What nodegroup to associate the chef-tag with"
+  method_option :revision,  :required => true, :aliases => "-r", :desc => "What svn revision to use for the tag"
+  method_option :conf_file, :aliases => "-c", :desc => "Configuration file"
+  def create_tag
+    conf = load_conf(options[:conf_file] || CONFIG_FILE)
+    rhelper = RequestHelper.new(conf)
+    rhelper.create_tag(options)
+  end
+
+  method_option :nodegroup, :required => true, :aliases => "-n", :desc => "What nodegroup to do the dryrun for"
+  method_option :tag,  :aliases => "-t", :desc => "What chef-tag to do the dryrun for (can also be trunk or branches/mybranch or blank (for current tag)"
+  method_option :conf_file, :aliases => "-c", :desc => "Configuration file"
+  desc 'dryrun', 'perform a dryrun'
+  def dryrun
+    conf = load_conf(options[:conf_file] || CONFIG_FILE)
+    rhelper = RequestHelper.new(conf)
+    rhelper.dryrun(options)
+  end
+
+  method_option :conf_file, :aliases => "-c", :desc => "Configuration file"
+  method_option :nodegroup1, :required => true, :desc => "What nodegroup to do the diffrun for"
+  method_option :nodegroup2, :required => true, :desc => "What nodegroup to do the diffrun for"
+  method_option :tag1, :desc => "What chef-tag to do diffrun for (can also be trunk or branches/mybranch or blank (for current tag)"
+  method_option :tag2, :desc => "What chef-tag to do diffrun for (can also be trunk or branches/mybranch or blank (for current tag)"
+  method_option :conf_file, :aliases => "-c", :desc => "Configuration file"
+  desc 'diffrun', 'perform a diffrun'
+  def diffrun
+    conf = load_conf(options[:conf_file] || CONFIG_FILE)
+    rhelper = RequestHelper.new(conf)
+    rhelper.dryrun(options)
+  end
+
+  desc "config", "configuration setup"
+  method_option :conf_file, :aliases => "-c", :desc => "Where to write config to"
+  def config
+    config_file = File.expand_path(options[:conf_file] || CONFIG_FILE)
+    puts "Provide the following inputs so microwave can save them to #{config_file} for future execution"
+    conf = {}
+    conf[:username] = ask("Username: ")
+    conf[:password] = ask("Password: ", true)
+    conf[:server] = ask("Chefkitchen server: ")
+    File.open(config_file, 'w') do |f|
+      YAML.dump(conf, f)
+    end
+    FileUtils.chmod 0700, config_file 
+    puts "#{config_file} has been created"
+  end
+
+  private
+  def ask(str,mask=false)
+    begin
+      print str
+      system 'stty -echo;' if mask
+      input = STDIN.gets.chomp
+    ensure
+      system 'stty echo; echo ""'
+    end
+    return input
+  end
+
+  def load_conf(conf_file)
+    YAML::load(File.open(File.expand_path(conf_file)))
+  end
+end
+
+Microwave.start
