@@ -93,8 +93,11 @@ class RequestHelper
       response = RestClient.get("http://#{@server}/tags/#{options[:id]}",
                                  {:cookies => @cookies, :content_type => 'application/json', :accept => :json})
       result = JSON.parse(response)
-      puts JSON.pretty_generate(result)
-         
+      if options[:json]
+        puts JSON.pretty_generate(result)
+      else
+        display_tag(result)
+      end
     rescue => e
       puts e.inspect
     end
@@ -117,6 +120,21 @@ class RequestHelper
     puts "Files generated: "
     result['files'].each do |file|
       puts file['path']
+    end
+  end
+
+  def display_tag(result)
+    puts "Tag info: "
+    puts JSON.pretty_generate(result['tag'])
+    puts "\n"
+    puts "Dryrun(s): "
+    result['dryruns'].each do |dryrun|
+      puts "http://#{@server}/dryruns/#{dryrun['dryrun']['id']}"
+    end
+    puts "\n"
+    puts "Diffrun(s): "
+    result['diff_requests'].each do |diff_request|
+      puts "http://#{@server}/diff_requests/#{diff_request['diff_request']['id']}"
     end
   end
 end
