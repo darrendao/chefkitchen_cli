@@ -11,11 +11,11 @@ require 'request_helper'
 class Microwave < Thor
   CONFIG_FILE = File.expand_path('~/.chefkitchen.yml')
 
-  desc "create_tag", "create a chef tag" 
+  desc "tag", "create a chef tag" 
   method_option :nodegroup, :aliases => "-n", :desc => "What nodegroup to associate the chef-tag with"
   method_option :revision,  :required => true, :aliases => "-r", :desc => "What svn revision to use for the tag"
   method_option :conf_file, :aliases => "-c", :desc => "Configuration file"
-  def create_tag
+  def tag
     conf = load_conf(options[:conf_file] || CONFIG_FILE)
     rhelper = RequestHelper.new(conf)
     rhelper.create_tag(options)
@@ -41,14 +41,32 @@ class Microwave < Thor
   def diffrun
     conf = load_conf(options[:conf_file] || CONFIG_FILE)
     rhelper = RequestHelper.new(conf)
-    rhelper.dryrun(options)
+    rhelper.diffrun(options)
+  end
+
+  desc 'show_dryrun', 'show dryrun result'
+  method_option :id, :required => true, :desc => "ID of the dryrun to display"
+  method_option :json, :desc => "Return result in json format"
+  def show_dryrun
+    conf = load_conf(options[:conf_file] || CONFIG_FILE)
+    rhelper = RequestHelper.new(conf)
+    rhelper.show_dryrun(options)
+  end
+
+  desc 'show_diffrun', 'show diffrun result'
+  method_option :id, :required => true, :desc => "ID of the diffrun to display"
+  method_option :json, :desc => "Return result in json format"
+  def show_diffrun
+    conf = load_conf(options[:conf_file] || CONFIG_FILE)
+    rhelper = RequestHelper.new(conf)
+    rhelper.show_diffrun(options)
   end
 
   desc "config", "configuration setup"
   method_option :conf_file, :aliases => "-c", :desc => "Where to write config to"
   def config
     config_file = File.expand_path(options[:conf_file] || CONFIG_FILE)
-    puts "Provide the following inputs so microwave can save them to #{config_file} for future execution"
+    puts "Provide the following inputs so chefkitchen_cli can save them to #{config_file} for future execution"
     conf = {}
     conf[:username] = ask("Username: ")
     conf[:password] = ask("Password: ", true)
