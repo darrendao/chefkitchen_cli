@@ -18,7 +18,7 @@ class Microwave < Thor
   def tag
     conf = load_conf(options[:conf_file] || CONFIG_FILE)
     rhelper = RequestHelper.new(conf)
-    rhelper.create_tag(options)
+    rhelper.tag(options)
   end
 
   method_option :nodegroup, :required => true, :aliases => "-n", :desc => "What nodegroup to do the dryrun for"
@@ -60,6 +60,15 @@ class Microwave < Thor
     conf = load_conf(options[:conf_file] || CONFIG_FILE)
     rhelper = RequestHelper.new(conf)
     rhelper.show_diffrun(options)
+  end
+
+  desc 'show_tag', 'show the result of chef tagging'
+  method_option :id, :required => true, :desc => "ID of the chef tag to display"
+  method_option :json, :desc => "Return result in json format"
+  def show_tag
+    conf = load_conf(options[:conf_file] || CONFIG_FILE)
+    rhelper = RequestHelper.new(conf)
+    rhelper.show_tag(options)
   end
 
   desc "config", "configuration setup"

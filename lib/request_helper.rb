@@ -21,7 +21,8 @@ class RequestHelper
                                  {:tag => {:revision => revision, :nodegroup => nodegroup}}, 
                                  {:cookies => @cookies, :content_type => 'application/json', :accept => :json})
       result = JSON.parse(response)
-      puts "http://#{@server}/tags/#{result['tag']['id']}"
+      puts "Tag id: #{result['tag']['id']}"
+      puts "URL: http://#{@server}/tags/#{result['tag']['id']}"
     rescue => e
       puts e.inspect
     end
@@ -82,6 +83,18 @@ class RequestHelper
       else
         display_diff(result)
       end
+    rescue => e
+      puts e.inspect
+    end
+  end
+
+  def show_tag(options)
+    begin
+      response = RestClient.get("http://#{@server}/tags/#{options[:id]}",
+                                 {:cookies => @cookies, :content_type => 'application/json', :accept => :json})
+      result = JSON.parse(response)
+      puts JSON.pretty_generate(result)
+         
     rescue => e
       puts e.inspect
     end
